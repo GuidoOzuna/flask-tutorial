@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Saludo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <h1>¡Hola, {{ nombre }}! 👋</h1>
-    <a href="{{ url_for('home') }}">Volver al inicio</a>
+    <a href="/templates/index.html">Volver al inicio</a>
 </body>
 </html>
