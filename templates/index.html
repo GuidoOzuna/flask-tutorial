@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ titulo }}</title>
+    <!-- Enlaza el CSS (opcional) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>¡Bienvenido a mi Página!</h1>
+    <p>Esta página está hecha con Python y Flask.</p>
+    
+    <!-- Ejemplo de enlace a otra ruta -->
+    <a href="{{ url_for('saludar', nombre='Visitante') }}">Saludar</a>
+</body>
+</html>
