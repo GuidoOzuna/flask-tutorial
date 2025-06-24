@@ -3,19 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio</title>
+    <title>Censo Habitacional - Inicio</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <nav>
         <a href="/" class="active">Inicio</a>
-        <a href="/tabla">Tablas</a>
-        <a href="/grafico">Gráficos</a>
+        <a href="/tabla">Datos del Censo</a>
+        <a href="/grafico">Estadísticas</a>
     </nav>
     
     <main>
-        <h1>Bienvenido a mi sitio</h1>
-        <p>Este es un ejemplo básico con Flask.</p>
+        <h1>Proyecto de Censo Habitacional</h1>
+        <p>Este sistema permite recopilar información demográfica y habitacional de la población para análisis estadístico y planificación urbana.</p>
+        
+        <section class="formulario-censo">
+            <h2>Participa en el censo</h2>
+            <form action="/" method="post">
+                <div class="form-group">
+                    <label for="edad">Edad:</label>
+                    <input type="number" id="edad" name="edad" min="1" max="120" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ocupacion">Ocupación:</label>
+                    <select id="ocupacion" name="ocupacion" required>
+                        <option value="">Seleccione una opción</option>
+                        <option value="Estudiante">Estudiante</option>
+                        <option value="Empleado">Empleado</option>
+                        <option value="Desempleado">Desempleado</option>
+                        <option value="Jubilado">Jubilado</option>
+                        <option value="Independiente">Trabajador independiente</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tipo_vivienda">Tipo de vivienda:</label>
+                    <select id="tipo_vivienda" name="tipo_vivienda" required>
+                        <option value="">Seleccione una opción</option>
+                        <option value="Casa">Casa</option>
+                        <option value="Apartamento">Apartamento</option>
+                        <option value="Habitación">Habitación</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ingresos">Ingresos mensuales (USD):</label>
+                    <input type="number" id="ingresos" name="ingresos" min="0" step="100" required>
+                </div>
+                
+                <button type="submit">Enviar datos</button>
+            </form>
+        </section>
+
+        <section class="informacion-censo">
+            <h2>Importancia del Censo Habitacional</h2>
+            <p>El censo habitacional nos permite:</p>
+            <ul>
+                <li>Conocer las características demográficas de la población</li>
+                <li>Planificar mejoras en infraestructura y servicios públicos</li>
+                <li>Identificar necesidades específicas de vivienda</li>
+                <li>Distribuir recursos de manera más eficiente</li>
+                <li>Realizar estudios socioeconómicos para políticas públicas</li>
+            </ul>
+        </section>
     </main>
+
+    <footer>
+        <p>Proyecto de Censo Habitacional &copy; 2023 - Todos los derechos reservados</p>
+    </footer>
 </body>
 </html>

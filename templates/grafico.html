@@ -3,19 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contacto</title>
+    <title>Censo Habitacional - Estadísticas</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <nav>
         <a href="/">Inicio</a>
-        <a href="/tabla">Tablas</a>
-        <a href="/grafico" class="active">Gráficos</a>
+        <a href="/tabla">Datos del Censo</a>
+        <a href="/grafico" class="active">Estadísticas</a>
     </nav>
     
     <main>
-        <h1>Gráficos</h1>
-        <p>Información sobre las tablas.</p>
+        <h1>Estadísticas del Censo Habitacional</h1>
+        <p>Visualización gráfica de los datos recopilados. Total de registros: {{ datos|length }}</p>
+        
+        <div class="resumen-estadisticas">
+            <div class="estadistica">
+                <h3>Edad promedio</h3>
+                <p>{{ edad_promedio }} años</p>
+            </div>
+            <div class="estadistica">
+                <h3>Ingreso promedio</h3>
+                <p>${{ ingreso_promedio }}</p>
+            </div>
+            <div class="estadistica">
+                <h3>Vivienda más común</h3>
+                <p>{{ vivienda_mas_comun }}</p>
+            </div>
+        </div>
+        
+        <div class="graficos-container">
+            <div class="grafico">
+                <h2>Distribución por Edades</h2>
+                <canvas id="edadChart"></canvas>
+                <div class="leyenda-grafico">
+                    <p>Distribución de la población por grupos de edad</p>
+                </div>
+            </div>
+            
+            <div class="grafico">
+                <h2>Ocupación de los Encuestados</h2>
+                <canvas id="ocupacionChart"></canvas>
+                <div class="leyenda-grafico">
+                    <p>Porcentaje de cada tipo de ocupación</p>
+                </div>
+            </div>
+            
+            <div class="grafico">
+                <h2>Tipos de Vivienda</h2>
+                <canvas id="viviendaChart"></canvas>
+                <div class="leyenda-grafico">
+                    <p>Distribución de tipos de vivienda</p>
+                </div>
+            </div>
+            
+            <div class="grafico">
+                <h2>Distribución de Ingresos</h2>
+                <canvas id="ingresosChart"></canvas>
+                <div class="leyenda-grafico">
+                    <p>Distribución de ingresos mensuales en USD</p>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <script>
+        // Datos para los gráficos
+        const datos = {{ datos|tojson|safe }};
+        
+        // Procesar datos
+        const edades = datos.map(d => parseInt(d.edad));
+        const ingresos = datos.map(d => parseFloat(d.ingresos));
+        
+        // Conteo de ocupaciones
+        const conteoOcupaciones = {};
+        datos.forEach(d => {
+            conteoOcupaciones[d.ocupacion] = (conteoOcupaciones[d.ocupacion] || 0) + 1;
+        });
+        
+        // Conteo de viviendas
+        const conteoViviendas = {};
+        datos.forEach(d => {
+            conteoViviendas[d.tipo_vivienda] = (conteoViviendas[d.tipo_vivienda] || 0) + 1;
+        });
+        
+        // Grupos de ingresos
+        const gruposIngresos = [0, 500, 1000, 1500, 2000, 2500, 3000];
+        const conteoIngresos = new Array(gruposIngresos.length - 1).fill(0);
+        ingresos.forEach(ingreso => {
+            for (let i = 0; i < gruposIngresos.length - 1; i++) {
+                if (ingreso >= gruposIngresos[i] && ingreso < gruposIngresos[i + 1]) {
+                    conteoIngresos[i]++;
+                    break;
+                } else if (i === gruposIngresos.length - 2 && ingreso >= gruposIngresos[i + 1]) {
+                    conteoIngresos[i + 1]++;
+                }
+            }
+        });
+        
+        // Etiquetas para ingresos
+        const etiquetasIngresos = [];
+        for (let i = 0; i < gruposIngresos.length - 1; i++) {
+            etiquetasIngresos.push(`$${gruposIngresos[i]}-${gruposIngresos[i + 1]}`);
+        }
+        
+        // Gráfico de edades (histograma)
+        new Chart(
+            document.getElementById('edadChart').getContext('2d'),
+            {
+                type: 'bar',
+                data: {
+                    labels: ['0-18', '19-30', '31-45', '46-60', '60+'],
+                    datasets: [{
+                        label: 'Personas',
+                        data: [
+                            edades.filter(e => e <= 18).length,
+                            edades.filter(e => e > 18 && e <= 30).length,
+                            edades.filter(e => e > 30 && e <= 45).length,
+                            edades.filter(e => e > 45 && e <= 60).length,
+                            edades.filter(e => e > 60).length
+                        ],
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Cantidad de personas'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Grupos de edad'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+        
+        // Gráfico de ocupación (dona)
+        new Chart(
+            document.getElementById('ocupacionChart').getContext('2d'),
+            {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(conteoOcupaciones),
+                    datasets: [{
+                        data: Object.values(conteoOcupaciones),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            }
+        );
+        
+        // Gráfico de tipo de vivienda (tarta)
+        new Chart(
+            document.getElementById('viviendaChart').getContext('2d'),
+            {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(conteoViviendas),
+                    datasets: [{
+                        data: Object.values(conteoViviendas),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            }
+        );
+        
+        // Gráfico de distribución de ingresos
+        new Chart(
+            document.getElementById('ingresosChart').getContext('2d'),
+            {
+                type: 'bar',
+                data: {
+                    labels: etiquetasIngresos,
+                    datasets: [{
+                        label: 'Personas',
+                        data: conteoIngresos,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Cantidad de personas'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Rangos de ingresos (USD)'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    </script>
+
+    <footer>
+        <p>Proyecto de Censo Habitacional &copy; 2023 - Todos los derechos reservados</p>
+    </footer>
+</body>
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Censo Habitacional - Estadísticas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="/">Inicio</a>
+        <a href="/tabla">Datos del Censo</a>
+        <a href="/grafico" class="active">Estadísticas</a>
+    </nav>
+    
+    <main>
+        <h1>Estadísticas del Censo Habitacional</h1>
+        <p>Visualización gráfica de los datos recopilados. Total de registros: {{ datos|length }}</p>
+        
+        <div class="resumen-estadisticas">
+            <div class="estadistica">
+                <h3>Edad promedio</h3>
+                <p>{{ edad_promedio }} años</p>
+            </div>
+            <div class="estadistica">
+                <h3>Ingreso promedio</h3>
+                <p>${{ ingreso_promedio }}</p>
+            </div>
+            <div class="estadistica">
+                <h3>Vivienda más común</h3>
+                <p>{{ vivienda_mas_comun }}</p>
+            </div>
+        </div>
+        
+        <div class="graficos-container">
+            <div class="grafico">
+                <h2>Distribución por Edades</h2>
+                <canvas id="edadChart"></canvas>
+                <div class="leyenda-grafico">
+                    <p>Distribución de la población por grupos de edad</p>
+                </div>
+            </div>
+            
+            <div class="grafico">
+                <h2>Ocupación de los Encuestados</h2>
+                <canvas id="ocupacionChart"></canvas>
+                <div class="leyenda-grafico">
+                    <p>Porcentaje de cada tipo de ocupación</p>
+                </div>
+            </div>
+            
+            <div class="grafico">
+                <h2>Tipos de Vivienda</h2>
+                <canvas id="viviendaChart"></canvas>
+                <div class="leyenda-grafico">
+                    <p>Distribución de tipos de vivienda</p>
+                </div>
+            </div>
+            
+            <div class="grafico">
+                <h2>Distribución de Ingresos</h2>
+                <canvas id="ingresosChart"></canvas>
+                <div class="leyenda-grafico">
+                    <p>Distribución de ingresos mensuales en USD</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Datos para los gráficos
+        const datos = {{ datos|tojson|safe }};
+        
+        // Procesar datos
+        const edades = datos.map(d => parseInt(d.edad));
+        const ingresos = datos.map(d => parseFloat(d.ingresos));
+        
+        // Conteo de ocupaciones
+        const conteoOcupaciones = {};
+        datos.forEach(d => {
+            conteoOcupaciones[d.ocupacion] = (conteoOcupaciones[d.ocupacion] || 0) + 1;
+        });
+        
+        // Conteo de viviendas
+        const conteoViviendas = {};
+        datos.forEach(d => {
+            conteoViviendas[d.tipo_vivienda] = (conteoViviendas[d.tipo_vivienda] || 0) + 1;
+        });
+        
+        // Grupos de ingresos
+        const gruposIngresos = [0, 500, 1000, 1500, 2000, 2500, 3000];
+        const conteoIngresos = new Array(gruposIngresos.length - 1).fill(0);
+        ingresos.forEach(ingreso => {
+            for (let i = 0; i < gruposIngresos.length - 1; i++) {
+                if (ingreso >= gruposIngresos[i] && ingreso < gruposIngresos[i + 1]) {
+                    conteoIngresos[i]++;
+                    break;
+                } else if (i === gruposIngresos.length - 2 && ingreso >= gruposIngresos[i + 1]) {
+                    conteoIngresos[i + 1]++;
+                }
+            }
+        });
+        
+        // Etiquetas para ingresos
+        const etiquetasIngresos = [];
+        for (let i = 0; i < gruposIngresos.length - 1; i++) {
+            etiquetasIngresos.push(`$${gruposIngresos[i]}-${gruposIngresos[i + 1]}`);
+        }
+        
+        // Gráfico de edades (histograma)
+        new Chart(
+            document.getElementById('edadChart').getContext('2d'),
+            {
+                type: 'bar',
+                data: {
+                    labels: ['0-18', '19-30', '31-45', '46-60', '60+'],
+                    datasets: [{
+                        label: 'Personas',
+                        data: [
+                            edades.filter(e => e <= 18).length,
+                            edades.filter(e => e > 18 && e <= 30).length,
+                            edades.filter(e => e > 30 && e <= 45).length,
+                            edades.filter(e => e > 45 && e <= 60).length,
+                            edades.filter(e => e > 60).length
+                        ],
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Cantidad de personas'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Grupos de edad'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+        
+        // Gráfico de ocupación (dona)
+        new Chart(
+            document.getElementById('ocupacionChart').getContext('2d'),
+            {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(conteoOcupaciones),
+                    datasets: [{
+                        data: Object.values(conteoOcupaciones),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            }
+        );
+        
+        // Gráfico de tipo de vivienda (tarta)
+        new Chart(
+            document.getElementById('viviendaChart').getContext('2d'),
+            {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(conteoViviendas),
+                    datasets: [{
+                        data: Object.values(conteoViviendas),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            }
+        );
+        
+        // Gráfico de distribución de ingresos
+        new Chart(
+            document.getElementById('ingresosChart').getContext('2d'),
+            {
+                type: 'bar',
+                data: {
+                    labels: etiquetasIngresos,
+                    datasets: [{
+                        label: 'Personas',
+                        data: conteoIngresos,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Cantidad de personas'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Rangos de ingresos (USD)'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    </script>
+
+    <footer>
+        <p>Proyecto de Censo Habitacional &copy; 2023 - Todos los derechos reservados</p>
+    </footer>
 </body>
 </html>
