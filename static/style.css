@@ -1,15 +1,37 @@
+/* Estilos generales */
 body {
     font-family: Arial, sans-serif;
-    text-align: center;
-    margin: 50px;
-    background-color: #f0f0f0;
-}
-
-h1 {
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
     color: #333;
 }
 
-a {
-    color: #0066cc;
+nav {
+    background: #333;
+    padding: 1rem;
+}
+
+nav a {
+    color: white;
     text-decoration: none;
+    margin-right: 1rem;
+    padding: 0.5rem;
+}
+
+nav a.active {
+    background: #555;
+    border-radius: 4px;
+}
+
+nav a:hover {
+    background: #666;
+}
+
+main {
+    padding: 2rem;
+}
+
+h1 {
+    color: #444;
 }
