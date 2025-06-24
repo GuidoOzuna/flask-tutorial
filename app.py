@@ -6,13 +6,13 @@ app = Flask(__name__)
 def inicio():
     return render_template("index.html")
 
-@app.route("/acerca")
+@app.route("/tabla")
 def acerca():
-    return render_template("acerca.html")
+    return render_template("tabla.html")
 
-@app.route("/contacto")
+@app.route("/grafico")
 def contacto():
-    return render_template("contacto.html")
+    return render_template("grafico.html")
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
